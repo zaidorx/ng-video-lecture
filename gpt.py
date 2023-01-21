@@ -4,27 +4,26 @@ import torch.nn as nn
 from torch.nn import functional as F
 
 # hyperparameters
-batch_size = 128 # how many independent sequences will we process in parallel?
+batch_size = 64 # how many independent sequences will we process in parallel?
 block_size = 256 # what is the maximum context length for predictions?
-max_iters = 5000
+max_iters = 10000
 eval_interval = 200
 learning_rate = 3e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-eval_iters = 200
+eval_iters = 100
 n_embd = 384
 n_head = 6
 n_layer = 10
 dropout = 0.2
-predicting = True # set to true to not train on this run
-model_name = "shakespeare.tar"
-best_model_name = "shakespeare_best.tar"
-
+predicting = False # set to true to not train on this run
+model_name = "marti.tar"
+best_model_name = "marti_best.tar"
 # ------------
 
 torch.manual_seed(1337)
 
 # wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
-with open('input.txt', 'r', encoding='utf-8') as f:
+with open('marti.txt', 'r', encoding='utf-8') as f:
     text = f.read()
 
 # here are all the unique characters that occur in this text
@@ -51,6 +50,12 @@ def get_batch(split):
     y = torch.stack([data[i+1:i+block_size+1] for i in ix])
     x, y = x.to(device), y.to(device)
     return x, y
+
+def get_initial_tokens(text):
+    data = torch.tensor(encode(text), dtype=torch.long)
+    x = torch.stack([data[i:i+block_size] for i in len(data)])
+    return x
+
 
 @torch.no_grad()
 def estimate_loss():
@@ -197,16 +202,17 @@ optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 epoch_init = 0
 #load model weights if exists
 model_to_load = best_model_name if predicting==True else model_name
+best_loss = float("inf")
 if os.path.exists(model_to_load):
     checkpoint = torch.load(model_to_load, map_location='cpu')
     model.load_state_dict(checkpoint['model_state_dict'])
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     epoch_init = checkpoint['epoch']
-    losses = checkpoint['losses']
+    best_loss = checkpoint['losses']['val']
 
 if (epoch_init < max_iters and predicting == False): # continue training
-    best_loss = float("inf")
-    for iter in range(max_iters):
+    
+    for iter in range(epoch_init+1, max_iters):
 
         # every once in a while evaluate the loss on train and val sets
         if iter % eval_interval == 0 or iter == max_iters - 1:
@@ -233,6 +239,13 @@ if (epoch_init < max_iters and predicting == False): # continue training
                 'losses': losses},
                 model_name)
 # generate from the model
-context = torch.zeros((1, 1), dtype=torch.long, device=device)
-print(decode(m.generate(context, max_new_tokens=1000)[0].tolist()))
-#open('more.txt', 'w').write(decode(m.generate(context, max_new_tokens=10000)[0].tolist()))
+print("Making predictions....")
+start_text = encode("Mañana ")
+data = torch.tensor(start_text, dtype=torch.long, device=device)
+data = torch.reshape(data, (1,len(data)))
+print(data.shape)
+#context = torch.zeros((1, 1), dtype=torch.long, device=device)
+results = m.generate(data, max_new_tokens=101)
+decoded = decode(results[0].tolist())
+print(decoded)
+#open('marti_more.txt', 'w').write(decode(m.generate(data, max_new_tokens=10000)[0].tolist()))
