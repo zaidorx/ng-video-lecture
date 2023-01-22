@@ -1,4 +1,6 @@
 import os
+import random
+import sys
 import time
 import torch
 import torch.nn as nn
@@ -16,7 +18,7 @@ n_embd = 384
 n_head = 6
 n_layer = 10
 dropout = 0.2
-predicting = False # set to true to not train on this run
+predicting = True # set to true to not train on this run
 model_name = "marti.tar"
 best_model_name = "marti_best.tar"
 # ------------
@@ -243,11 +245,13 @@ if (epoch_init < max_iters and predicting == False): # continue training
                 model_name)
 # generate from the model
 print("Making predictions....")
-start_text = encode("Patria *******")
+start_text = encode("La Guerra necesaria ")
 data = torch.tensor(start_text, dtype=torch.long, device=device)
 data = torch.reshape(data, (1,len(data)))
 print(data.shape)
 #context = torch.zeros((1, 1), dtype=torch.long, device=device)
+# make sure we get a different answer every time. Comment this line to get always the same answer.
+torch.manual_seed(random.randint(0, sys.maxsize))
 results = m.generate(data, max_new_tokens=2000)
 decoded = decode(results[0].tolist())
 print(decoded)
