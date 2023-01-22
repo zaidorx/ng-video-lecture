@@ -1,4 +1,5 @@
 import os
+import time
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -6,7 +7,7 @@ from torch.nn import functional as F
 # hyperparameters
 batch_size = 64 # how many independent sequences will we process in parallel?
 block_size = 256 # what is the maximum context length for predictions?
-max_iters = 10000
+max_iters = 30000
 eval_interval = 200
 learning_rate = 3e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -20,7 +21,7 @@ model_name = "marti.tar"
 best_model_name = "marti_best.tar"
 # ------------
 
-torch.manual_seed(1337)
+torch.manual_seed(1347)
 
 # wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
 with open('marti.txt', 'r', encoding='utf-8') as f:
@@ -211,19 +212,21 @@ if os.path.exists(model_to_load):
     best_loss = checkpoint['losses']['val']
 
 if (epoch_init < max_iters and predicting == False): # continue training
-    
+    start_time = time.time()
     for iter in range(epoch_init+1, max_iters):
 
         # every once in a while evaluate the loss on train and val sets
         if iter % eval_interval == 0 or iter == max_iters - 1:
             losses = estimate_loss()
-            print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+            elapsed = time.time() - start_time
+            print(f"step {iter}: elapsed {elapsed:.4f} segs, train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
             if losses['val'] < best_loss:
                 best_loss = losses['val']
                 torch.save({'model_state_dict': model.state_dict(),
                             'optimizer_state_dict': optimizer.state_dict(),
                             'epoch': iter,
                             'losses': losses}, best_model_name)
+            start_time = time.time()
 
         # sample a batch of data
         xb, yb = get_batch('train')
@@ -240,12 +243,12 @@ if (epoch_init < max_iters and predicting == False): # continue training
                 model_name)
 # generate from the model
 print("Making predictions....")
-start_text = encode("Mañana ")
+start_text = encode("Patria *******")
 data = torch.tensor(start_text, dtype=torch.long, device=device)
 data = torch.reshape(data, (1,len(data)))
 print(data.shape)
 #context = torch.zeros((1, 1), dtype=torch.long, device=device)
-results = m.generate(data, max_new_tokens=101)
+results = m.generate(data, max_new_tokens=2000)
 decoded = decode(results[0].tolist())
 print(decoded)
 #open('marti_more.txt', 'w').write(decode(m.generate(data, max_new_tokens=10000)[0].tolist()))
