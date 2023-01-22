@@ -251,7 +251,7 @@ if (epoch_init < max_iters and predicting == False): # continue training
                 model_name)
 # generate from the model
 print("Making predictions....")
-start_text = encode("La Guerra necesaria ")
+start_text = enc.encode("La Guerra necesaria ")
 data = torch.tensor(start_text, dtype=torch.long, device=device)
 data = torch.reshape(data, (1,len(data)))
 print(data.shape)
