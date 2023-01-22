@@ -10,25 +10,25 @@ import tiktoken
 
 # hyperparameters
 batch_size = 64 # how many independent sequences will we process in parallel?
-block_size = 256 # what is the maximum context length for predictions?
-max_iters = 30000
+block_size = 64 # what is the maximum context length for predictions?
+max_iters = 1000
 eval_interval = 200
 learning_rate = 3e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 eval_iters = 100
 n_embd = 384
 n_head = 6
-n_layer = 5
+n_layer = 10
 dropout = 0.2
-predicting = True # set to true to not train on this run
-model_name = "marti.tar"
-best_model_name = "marti_best.tar"
+predicting = False # set to true to not train on this run
+model_name = "marti_tiktoker.tar"
+best_model_name = "marti_tiktoker_best.tar"
 # ------------
 
 torch.manual_seed(1347)
 
 # wget https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt
-with open('shakespeare.txt', 'r', encoding='utf-8') as f:
+with open('marti.txt', 'r', encoding='utf-8') as f:
     text = f.read()
 
 # here are all the unique characters that occur in this text
