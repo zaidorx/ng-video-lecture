@@ -259,6 +259,6 @@ print(data.shape)
 # make sure we get a different answer every time. Comment this line to get always the same answer.
 torch.manual_seed(random.randint(0, sys.maxsize))
 results = m.generate(data, max_new_tokens=2000)
-decoded = decode(results[0].tolist())
+decoded = enc.decode(results[0].tolist())
 print(decoded)
 #open('shakespeare_more.txt', 'w').write(enc.decode(m.generate(data, max_new_tokens=10000)[0].tolist()))
