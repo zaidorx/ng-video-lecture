@@ -11,16 +11,16 @@ import tiktoken
 # hyperparameters
 batch_size = 64 # how many independent sequences will we process in parallel?
 block_size = 64 # what is the maximum context length for predictions?
-max_iters = 1000
+max_iters = 40000
 eval_interval = 200
-learning_rate = 3e-4
+learning_rate = 1e-4
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 eval_iters = 100
 n_embd = 384
 n_head = 6
 n_layer = 10
 dropout = 0.2
-predicting = False # set to true to not train on this run
+predicting = True # set to true to not train on this run
 model_name = "marti_tiktoker.tar"
 best_model_name = "marti_tiktoker_best.tar"
 # ------------
@@ -32,11 +32,11 @@ with open('marti.txt', 'r', encoding='utf-8') as f:
     text = f.read()
 
 # here are all the unique characters that occur in this text
-chars = sorted(list(set(text)))
-vocab_size = len(chars)
+#chars = sorted(list(set(text)))
+#vocab_size = len(chars)
 # create a mapping from characters to integers
-stoi = { ch:i for i,ch in enumerate(chars) }
-itos = { i:ch for i,ch in enumerate(chars) }
+#stoi = { ch:i for i,ch in enumerate(chars) }
+#itos = { i:ch for i,ch in enumerate(chars) }
 #encode = lambda s: [stoi[c] for c in s] # encoder: take a string, output a list of integers
 #decode = lambda l: ''.join([itos[i] for i in l]) # decoder: take a list of integers, output a string
 
@@ -251,14 +251,14 @@ if (epoch_init < max_iters and predicting == False): # continue training
                 model_name)
 # generate from the model
 print("Making predictions....")
-start_text = enc.encode("La Guerra necesaria ")
+start_text = enc.encode("Patria ")
 data = torch.tensor(start_text, dtype=torch.long, device=device)
 data = torch.reshape(data, (1,len(data)))
 print(data.shape)
 #context = torch.zeros((1, 1), dtype=torch.long, device=device)
 # make sure we get a different answer every time. Comment this line to get always the same answer.
 torch.manual_seed(random.randint(0, sys.maxsize))
-results = m.generate(data, max_new_tokens=2000)
+results = m.generate(data, max_new_tokens=1000)
 decoded = enc.decode(results[0].tolist())
 print(decoded)
 #open('shakespeare_more.txt', 'w').write(enc.decode(m.generate(data, max_new_tokens=10000)[0].tolist()))
